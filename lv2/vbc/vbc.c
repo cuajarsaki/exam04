@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <malloc.h> // change this to <stdlib.h>
+#include <malloc.h> 
 #include <ctype.h>
 
 typedef struct node
@@ -63,6 +63,8 @@ int expect(char **s, char c)
 }
 
 // --------------------------------------
+// 追加部分
+
 node *parse_expr(char **s);
 node *parse_term(char **s);
 node *parse_factor(char **s);
@@ -161,18 +163,20 @@ int main(int argc, char **argv)
 	if (argc != 2)
 		return (1);
 	// --------------------------------------
+	// mainの修正部分
 	char *input = argv[1];
 
 	node *tree = parse_expr(&input);
 	if (!tree)
 		return (1);
 
-	if (!input)
+	if (*input != '\0')
 	{
-		unexpected(*input);
-		destroy_tree(tree);
-		return (1);
+    unexpected(*input);  
+    destroy_tree(tree);
+    return (1);
 	}
+	
 	// --------------------------------------
 	printf("%d\n", eval_tree(tree));
 	destroy_tree(tree);
