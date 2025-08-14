@@ -1,55 +1,59 @@
 #include <unistd.h>
-#include <sys/wait.h>
 #include <stdlib.h>
 
 int ft_popen(const char *file, char *const argv[], char type)
 {
-    int pipefd[2];
+    int fd[2];
     pid_t pid;
 
     if (!file || !argv || (type != 'r' && type != 'w'))
         return (-1);
 
-    if (pipe(pipefd) == -1)
+    if (pipe(fd) == -1)
         return (-1);
 
     pid = fork();
     if (pid == -1)
     {
-        close(pipefd[0]);
-        close(pipefd[1]);
+        close(fd[0]);
+        close(fd[1]);
         return (-1);
     }
 
+    // child process
     if (pid == 0) 
     {
+        // read mode: [1]をdup2して、[0]を返す
         if (type == 'r')
         {
-            close(pipefd[0]);
-            dup2(pipefd[1], STDOUT_FILENO);
-            close(pipefd[1]);
+            close(fd[0]);
+            dup2(fd[1], STDOUT_FILENO);
+            close(fd[1]);
+            execvp(file, argv);
+            exit(-1);
         }
-        else
+        // write mode: その逆
+        if (type == 'w')
         {
-            close(pipefd[1]);
-            dup2(pipefd[0], STDIN_FILENO);
-            close(pipefd[0]);
+            close(fd[1]);
+            dup2(fd[0], STDIN_FILENO);
+            close(fd[0]);
+            execvp(file, argv);
+            exit(-1);
         }
-
-        execvp(file, argv);
-        exit(127);
     }
-    else
+    
+    // parent process
+    if (type == 'r')
     {
-        if (type == 'r')
-        {
-            close(pipefd[1]);
-            return (pipefd[0]);
-        }
-        else
-        {
-            close(pipefd[0]);
-            return (pipefd[1]);
-        }
+        close(fd[1]);
+        return (fd[0]);
     }
+    if (type == 'w')
+    {
+        close(fd[0]);
+        return (fd[1]);
+    }
+
+    return (-1); 
 }
